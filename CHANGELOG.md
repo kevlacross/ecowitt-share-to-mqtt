@@ -2,6 +2,12 @@
 
 All notable changes use [Semantic Versioning](https://semver.org/).
 
+## 0.1.1 - 2026-09-26
+
+- Localized generated sensor names in German and English, selectable in the WebUI.
+- Added meaningful names for live shared-station measurements, including pressure, rain, min/max values, wind, solar data, sunrise/sunset and battery status.
+- Kept MQTT topics and Home Assistant `unique_id` values stable while improving display names.
+
 ## 0.1.0 - 2026-09-26
 
 - Initial private-test release.

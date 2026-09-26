@@ -42,7 +42,7 @@ docker compose up --build -d
 
 Open `http://UNRAID-IP:8080`, enter MQTT settings, test the connection, add a share URL and press **Jetzt synchronisieren**. Select sensors after the first sync. Only selected sensors are published and discovered.
 
-For Unraid, import `unraid/Ecowitt-share_to_MQTT.xml` after replacing the three `REPLACE_WITH_...` placeholders once an image has been published. Map `/config` to `/mnt/user/appdata/Ecowitt-share_to_MQTT`; do not use privileged mode.
+For Unraid, use `templates/ecowitt-share-to-mqtt.xml` with the GHCR image after the first release is published. Map `/config` to `/mnt/user/appdata/Ecowitt-share_to_MQTT`; do not use privileged mode.
 
 ## Operations
 
@@ -53,7 +53,7 @@ For Unraid, import `unraid/Ecowitt-share_to_MQTT.xml` after replacing the three 
 
 ## Releases and Community Applications
 
-Releases follow Semantic Versioning. A GitHub tag such as `v0.1.0` builds multi-architecture images for GHCR through GitHub Actions. The Community Applications submission files are `ca_profile.xml`, `icon.svg`, and `templates/ecowitt-share-to-mqtt.xml`. Replace `kevlacross` after creating the repository, run the CA portal validation, and submit only after a real broker and Home Assistant test succeeds.
+Releases follow Semantic Versioning. A GitHub tag such as `v0.1.0` builds multi-architecture images for GHCR through GitHub Actions. The Community Applications submission files are `ca_profile.xml`, `icon.svg`, and `templates/ecowitt-share-to-mqtt.xml`. Run the CA portal validation before submitting the application.
 
 ## Security
 

@@ -1,5 +1,6 @@
 import mqtt from "mqtt";
 import { createHash } from "node:crypto";
+import { homeAssistantMetadata } from "./home-assistant.js";
 const slug = (value) => String(value).toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,"") || "sensor";
 const escapeTopic = (value) => String(value).replace(/[#+]/g, "_");
 export class MqttPublisher {
@@ -18,7 +19,7 @@ export class MqttPublisher {
   publish(settings, station, sensors) {
     if(!this.connected) return; const c=this.config(settings), base=escapeTopic(c.baseTopic||"ecowitt_share"), discovery=escapeTopic(c.discoveryPrefix||"homeassistant"), stationKey=slug(station.id);
     for(const sensor of sensors.filter(s=>s.enabled)) { const key=slug(sensor.stableId), id=`ecowitt_share_${stationKey}_${key}`, state=`${base}/${stationKey}/${key}/state`, label=sensor.customName||sensor.name;
-      const config={name:label,unique_id:id,state_topic:state,availability_topic:`${base}/availability`,unit_of_measurement:sensor.unit||undefined,device:{identifiers:[`ecowitt_share_${station.id}`],name:station.name,manufacturer:"Ecowitt",model:"Shared Station"}};
+      const config={name:label,unique_id:id,state_topic:state,availability_topic:`${base}/availability`,...homeAssistantMetadata(sensor),device:{identifiers:[`ecowitt_share_${station.id}`],name:station.name,manufacturer:"Ecowitt",model:"Shared Station"}};
       this.client.publish(`${discovery}/sensor/${id}/config`,JSON.stringify(config),{retain:true}); this.client.publish(state,String(sensor.value),{retain:true});
     }
   }

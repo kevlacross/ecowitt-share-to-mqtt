@@ -17,6 +17,7 @@ Ecowitt shared station  →  Ecowitt Share to MQTT  →  MQTT broker  →  Home 
 - Supports one or many shared stations, each with its own sync interval.
 - Detects the measurements actually supplied by Ecowitt; no fixed sensor list is required.
 - Lets you enable, disable and rename individual sensors before publishing.
+- Uses meaningful German or English default names for recognised Ecowitt fields; your own sensor names always take priority.
 - Creates one Home Assistant device per weather station with clean names, units and availability.
 - Stores configuration and discovered sensors in SQLite under `/config`.
 - Provides a small local web UI for stations, MQTT, monitoring and manual sync.
@@ -24,12 +25,13 @@ Ecowitt shared station  →  Ecowitt Share to MQTT  →  MQTT broker  →  Home 
 
 ## Quick start on Unraid
 
-1. Install the container image `ghcr.io/kevlacross/ecowitt-share-to-mqtt:0.1.0` with the included Unraid template: [`templates/ecowitt-share-to-mqtt.xml`](templates/ecowitt-share-to-mqtt.xml).
+1. Install the container image `ghcr.io/kevlacross/ecowitt-share-to-mqtt:0.1.1` with the included Unraid template: [`templates/ecowitt-share-to-mqtt.xml`](templates/ecowitt-share-to-mqtt.xml).
 2. Map `/config` to a persistent path, for example `/mnt/user/appdata/Ecowitt-share_to_MQTT/config`.
 3. Map container port `8080` to an available host port, for example `8081`.
 4. Open `http://UNRAID-IP:8081`.
 5. Enter the MQTT broker details and use **Verbindung testen**.
 6. Add an Ecowitt share URL, run **Station jetzt synchronisieren**, then select the discovered sensors.
+7. Select **Deutsch** or **English** for the generated sensor names and synchronize once more. This never changes Home Assistant IDs or your own names.
 
 Home Assistant will add the device and selected entities automatically when MQTT Discovery is enabled. The container does not need privileged mode or host networking.
 
@@ -46,7 +48,7 @@ For development from source, use `docker compose up --build -d`. Open `http://lo
 ```yaml
 services:
   ecowitt-share-to-mqtt:
-    image: ghcr.io/kevlacross/ecowitt-share-to-mqtt:0.1.0
+    image: ghcr.io/kevlacross/ecowitt-share-to-mqtt:0.1.1
     container_name: Ecowitt-share_to_MQTT
     ports:
       - "8080:8080"
@@ -59,7 +61,7 @@ services:
 
 Enable the built-in MQTT integration and leave MQTT Discovery enabled. By default, discovery is published below `homeassistant` and states below `ecowitt_share`.
 
-Each station becomes its own device. Renaming a station, a sensor or the MQTT base topic does **not** change the Home Assistant `unique_id`, so existing dashboards and automations remain intact. Deleting a station removes its retained discovery entries.
+Each station becomes its own device. Renaming a station, a sensor or the MQTT base topic does **not** change the Home Assistant `unique_id`, so existing dashboards and automations remain intact. Deleting a station removes its retained discovery entries. The selectable sensor language changes only automatically generated display names after the next sync; custom names always take priority.
 
 Common measurements include temperature, humidity, pressure, wind, rain, UV, solar radiation, air quality, soil/leaf sensors, battery levels and signal strength. The actual entity list depends entirely on the station and sensors shared with you.
 
@@ -88,7 +90,7 @@ Useful commands:
 
 ```bash
 docker logs Ecowitt-share_to_MQTT
-docker pull ghcr.io/kevlacross/ecowitt-share-to-mqtt:0.1.0
+docker pull ghcr.io/kevlacross/ecowitt-share-to-mqtt:0.1.1
 ```
 
 If a share is revoked or expires, create a new share in Ecowitt and update that station; the other stations continue syncing.

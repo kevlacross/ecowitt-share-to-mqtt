@@ -1,3 +1,5 @@
+import { sensorLabel } from "./sensor-labels.js";
+
 /**
  * Adapter for Ecowitt dashboard share links.  This intentionally owns all
  * knowledge of the undocumented Web API; consumers receive only normalized
@@ -42,17 +44,17 @@ export class EcowittShareProvider {
     return (result.list || []).map(({ device_id, share_id, name, type }) => ({ deviceId: device_id, shareId: share_id, name, type }));
   }
 
-  async fetchStation(shareUrl, explicitDeviceId = null) {
+  async fetchStation(shareUrl, explicitDeviceId = null, language = "de") {
     const { authorize, deviceId } = this.parseShareUrl(shareUrl);
     const stations = await this.request("index/get_device_list", { authorize });
     const selected = (stations.list || []).find((entry) => entry.device_id === (explicitDeviceId || deviceId)) || (stations.list || [])[0];
     if (!selected) throw new Error("The share link exposes no weather station");
     const dashboard = await this.request("index/home", { authorize, device_id: selected.device_id });
-    return { station: { id: selected.device_id, shareId: selected.share_id, name: selected.name, gatewayVersion: dashboard.version || null, utcOffsetSeconds: Number(dashboard.UTC_offset) || null }, measurements: normalizeDashboard(dashboard.data || {}) };
+    return { station: { id: selected.device_id, shareId: selected.share_id, name: selected.name, gatewayVersion: dashboard.version || null, utcOffsetSeconds: Number(dashboard.UTC_offset) || null }, measurements: normalizeDashboard(dashboard.data || {}, language) };
   }
 }
 
-export function normalizeDashboard(groups) {
+export function normalizeDashboard(groups, language = "de") {
   const measurements = [];
   for (const [groupKey, group] of Object.entries(groups)) {
     if (!group || typeof group !== "object" || !group.data || typeof group.data !== "object") continue;
@@ -63,7 +65,7 @@ export function normalizeDashboard(groups) {
       measurements.push({
         stableId: `ecowitt:${groupKey}:${field.name || fieldKey}`,
         group: groupKey, key: field.name || fieldKey,
-        name: field.title_custom || field.title || field.name || fieldKey,
+        name: sensorLabel(field.name || fieldKey, field.title_custom || field.title, language),
         unit: field.unit || null, value: numeric ?? raw, numeric: numeric !== null,
         observedText: field.time || null, metadata: { valueType: field.value_type || null, batteryType: field.batt_type || null }
       });

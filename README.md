@@ -78,7 +78,7 @@ No DOM or CSS scraping is used. Because this is an undocumented dashboard interf
 | Topic | Behaviour |
 | --- | --- |
 | Sync interval | Per station; minimum 30 seconds, with custom intervals supported. |
-| Resilience | HTTP timeouts, retry with exponential backoff, invalid-response handling and per-station error isolation. |
+| Resilience | HTTP timeouts, invalid-response handling and per-station error isolation. |
 | MQTT | Connection test in the UI, automatic reconnect, last-will availability and clear status/error reporting. |
 | Monitoring | Last successful sync, duration, sensor count, last error and last MQTT publication are shown in the UI. |
 | Backup | Stop the container and copy `/config/ecowitt-share-to-mqtt.sqlite`. |

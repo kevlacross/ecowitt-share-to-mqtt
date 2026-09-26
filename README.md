@@ -25,6 +25,8 @@ Ecowitt shared station  →  Ecowitt Share to MQTT  →  MQTT broker  →  Home 
 
 ## Quick start on Unraid
 
+> **Unraid Community Applications:** This project is prepared for submission to the Community Applications store. Until Unraid's review is complete, install it with the included template or the GHCR image below.
+
 1. Install the container image `ghcr.io/kevlacross/ecowitt-share-to-mqtt:0.1.1` with the included Unraid template: [`templates/ecowitt-share-to-mqtt.xml`](templates/ecowitt-share-to-mqtt.xml).
 2. Map `/config` to a persistent path, for example `/mnt/user/appdata/Ecowitt-share_to_MQTT/config`.
 3. Map container port `8080` to an available host port, for example `8081`.
@@ -122,7 +124,7 @@ The POC prints structured measurements but intentionally does not echo the share
 
 Releases use [Semantic Versioning](https://semver.org/). Pushing a tag such as `v0.1.0` builds and publishes amd64 and arm64 images to GitHub Container Registry through GitHub Actions.
 
-The repository already contains the material needed for a future Community Applications submission: `ca_profile.xml`, `icon.svg` and the Unraid Docker template. Community Applications submission remains a separate step after ongoing real-world validation.
+The repository already contains the material needed for Community Applications submission: `ca_profile.xml`, `icon.svg` and the Unraid Docker template. The store listing becomes available only after submission and Unraid's review.
 
 ## License
 

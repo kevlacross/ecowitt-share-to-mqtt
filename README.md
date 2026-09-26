@@ -27,7 +27,7 @@ Ecowitt shared station  →  Ecowitt Share to MQTT  →  MQTT broker  →  Home 
 
 > **Unraid Community Applications:** This project is prepared for submission to the Community Applications store. Until Unraid's review is complete, install it with the included template or the GHCR image below.
 
-1. Install the container image `ghcr.io/kevlacross/ecowitt-share-to-mqtt:0.1.1` with the included Unraid template: [`templates/ecowitt-share-to-mqtt.xml`](templates/ecowitt-share-to-mqtt.xml).
+1. Install the container image `ghcr.io/kevlacross/ecowitt-share-to-mqtt:0.1.2` with the included Unraid template: [`templates/ecowitt-share-to-mqtt.xml`](templates/ecowitt-share-to-mqtt.xml).
 2. Map `/config` to a persistent path, for example `/mnt/user/appdata/Ecowitt-share_to_MQTT/config`.
 3. Map container port `8080` to an available host port, for example `8081`.
 4. Open `http://UNRAID-IP:8081`.
@@ -50,7 +50,7 @@ For development from source, use `docker compose up --build -d`. Open `http://lo
 ```yaml
 services:
   ecowitt-share-to-mqtt:
-    image: ghcr.io/kevlacross/ecowitt-share-to-mqtt:0.1.1
+    image: ghcr.io/kevlacross/ecowitt-share-to-mqtt:0.1.2
     container_name: Ecowitt-share_to_MQTT
     ports:
       - "8080:8080"
@@ -64,6 +64,8 @@ services:
 Enable the built-in MQTT integration and leave MQTT Discovery enabled. By default, discovery is published below `homeassistant` and states below `ecowitt_share`.
 
 Each station becomes its own device. Renaming a station, a sensor or the MQTT base topic does **not** change the Home Assistant `unique_id`, so existing dashboards and automations remain intact. Deleting a station removes its retained discovery entries. The selectable sensor language changes only automatically generated display names after the next sync; custom names always take priority.
+
+Discovery configures recognised values with their native Home Assistant metadata: temperature, humidity, atmospheric pressure, accumulated rainfall, rain rate, wind, wind direction, solar irradiance, UV index, PM2.5 and CO₂ receive a matching `device_class` and `state_class`. Units are normalised to Home Assistant-compatible forms such as `°C`, `°` and `mm/h`. Battery and signal fields are marked as diagnostics.
 
 Common measurements include temperature, humidity, pressure, wind, rain, UV, solar radiation, air quality, soil/leaf sensors, battery levels and signal strength. The actual entity list depends entirely on the station and sensors shared with you.
 
@@ -92,7 +94,7 @@ Useful commands:
 
 ```bash
 docker logs Ecowitt-share_to_MQTT
-docker pull ghcr.io/kevlacross/ecowitt-share-to-mqtt:0.1.1
+docker pull ghcr.io/kevlacross/ecowitt-share-to-mqtt:0.1.2
 ```
 
 If a share is revoked or expires, create a new share in Ecowitt and update that station; the other stations continue syncing.

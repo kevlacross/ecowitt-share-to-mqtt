@@ -2,6 +2,11 @@
 
 All notable changes use [Semantic Versioning](https://semver.org/).
 
+## 0.1.2 - 2026-09-26
+
+- Added Home Assistant-native MQTT Discovery metadata for recognised weather measurements.
+- Normalized units and marked diagnostic battery/signal entities appropriately.
+
 ## 0.1.1 - 2026-09-26
 
 - Localized generated sensor names in German and English, selectable in the WebUI.

@@ -13,6 +13,9 @@ test("uses localized, meaningful labels while retaining stable IDs", () => {
   assert.equal(sensorLabel("baromabs_increment", "Absolute", "de"), "Absoluter Luftdruck – Änderung");
   assert.equal(sensorLabel("dailyrain", "Daily", "en"), "Daily rain");
   assert.equal(sensorLabel("baromabsin_daily_max", "Daily max", "de"), "Absoluter Luftdruck – Tagesmaximum");
+  assert.equal(sensorLabel("max_daily_tempf", "Daily max", "de"), "Außentemperatur – Tagesmaximum");
+  assert.equal(sensorLabel("dailyrainin", "Daily", "de"), "Tagesregen");
+  assert.equal(sensorLabel("baromabsin_increment", "Absolute", "de"), "Absoluter Luftdruck – Änderung");
   assert.equal(sensorLabel("soilmoisture2", "", "de"), "Bodenfeuchte 2");
   const value = normalizeDashboard({ rain: { data: { dailyrain: { name: "dailyrain", title: "Daily", value: "0", unit: "mm" } } } }, "de")[0];
   assert.equal(value.name, "Tagesregen");

@@ -1,0 +1,16 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { EcowittShareProvider, normalizeDashboard } from "../src/ecowitt-share-provider.js";
+
+test("parses share link without leaking its token", () => {
+  const provider = new EcowittShareProvider();
+  assert.deepEqual(provider.parseShareUrl("https://www.ecowitt.net/home/share?authorize=ABC123&device_id=device"), { authorize: "ABC123", deviceId: "device" });
+  assert.throws(() => provider.parseShareUrl("https://example.test/home/share?authorize=ABC123"));
+});
+
+test("normalizes dynamic groups, decimal commas and non-numeric battery state", () => {
+  const values = normalizeDashboard({ outdoor: { data: { tempf: { name: "tempf", title_custom: "Temperature", value: "19,7", unit: "°C", time: "now" } } }, batt: { data: { wh65batt: { value: "Normal", unit: "", batt_type: "Normal" } } } });
+  assert.equal(values[0].value, 19.7);
+  assert.equal(values[0].stableId, "ecowitt:outdoor:tempf");
+  assert.equal(values[1].value, "Normal");
+});

@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>Ecowitt-share_to_MQTT</Name>
+  <Repository>ecowitt-share-to-mqtt:local</Repository>
+  <Registry/>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Overview>Local Ecowitt Shared Station to MQTT bridge with Home Assistant MQTT Discovery.</Overview>
+  <Category>HomeAutomation: Tools:Utilities</Category>
+  <WebUI>http://[IP]:[PORT:8080]</WebUI>
+  <ExtraParams>--security-opt no-new-privileges:true</ExtraParams>
+  <Config Name="WebUI Port" Target="8080" Default="8081" Mode="tcp" Description="Local admin interface" Type="Port" Display="always" Required="true" Mask="false">8081</Config>
+  <Config Name="Configuration" Target="/config" Default="/mnt/user/appdata/Ecowitt-share_to_MQTT/config" Mode="rw" Description="Persistent SQLite configuration and secrets" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/Ecowitt-share_to_MQTT/config</Config>
+  <Config Name="Timezone" Target="TZ" Default="Europe/Berlin" Mode="" Description="Timezone" Type="Variable" Display="advanced" Required="false" Mask="false">Europe/Berlin</Config>
+</Container>

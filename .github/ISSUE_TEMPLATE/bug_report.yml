@@ -1,0 +1,18 @@
+name: Bug report
+description: Report a reproducible problem without secrets.
+body:
+  - type: textarea
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Logs
+      description: Remove share links, tokens, passwords and personal locations.
+      render: text
+  - type: input
+    attributes:
+      label: Version
+    validations:
+      required: true

@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>Ecowitt-share_to_MQTT</Name>
+  <Repository>ghcr.io/kevlacross/ecowitt-share-to-mqtt:latest</Repository>
+  <Registry>https://ghcr.io</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/kevlacross/ecowitt-share-to-mqtt/issues</Support>
+  <Project>https://github.com/kevlacross/ecowitt-share-to-mqtt</Project>
+  <Overview>Reads Ecowitt shared-station data and publishes selected sensors through MQTT Home Assistant Discovery.</Overview>
+  <WebUI>http://[IP]:[PORT:8080]</WebUI>
+  <Icon>https://raw.githubusercontent.com/kevlacross/ecowitt-share-to-mqtt/main/assets/icon.png</Icon>
+  <Config Name="WebUI port" Target="8080" Default="8080" Mode="tcp" Description="Local admin UI" Type="Port" Display="always" Required="true" Mask="false">8080</Config>
+  <Config Name="Configuration" Target="/config" Default="/mnt/user/appdata/Ecowitt-share_to_MQTT" Mode="rw" Description="Persistent SQLite configuration" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/Ecowitt-share_to_MQTT</Config>
+  <Config Name="Timezone" Target="TZ" Default="Europe/Berlin" Mode="" Description="Timezone" Type="Variable" Display="advanced" Required="false" Mask="false">Europe/Berlin</Config>
+</Container>

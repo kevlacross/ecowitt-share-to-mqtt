@@ -1,0 +1,17 @@
+{
+  "name": "ecowitt-share-to-mqtt",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "poc": "node src/poc.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "mqtt": "^5.10.4"
+  }
+}

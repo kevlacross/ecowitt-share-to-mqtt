@@ -1,0 +1,14 @@
+services:
+  ecowitt-share-to-mqtt:
+    build: .
+    image: ecowitt-share-to-mqtt:local
+    container_name: Ecowitt-share_to_MQTT
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config:/config
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Berlin
+    security_opt:
+      - no-new-privileges:true

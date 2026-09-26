@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<Profile version="1">
+  <Name>Ecowitt Share to MQTT</Name>
+  <Repository>https://github.com/kevlacross/ecowitt-share-to-mqtt</Repository>
+  <Support>https://github.com/kevlacross/ecowitt-share-to-mqtt/issues</Support>
+  <Description>Ecowitt shared-station data bridge with MQTT and Home Assistant Discovery.</Description>
+  <Icon>https://raw.githubusercontent.com/kevlacross/ecowitt-share-to-mqtt/main/icon.svg</Icon>
+</Profile>

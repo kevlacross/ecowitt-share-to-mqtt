@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<CommunityApplications>
+<Maintainer>
   <Profile>Ecowitt Share to MQTT provides a small, self-hosted bridge for Ecowitt weather stations shared with you. It reads the shared-station dashboard, publishes the selected measurements to MQTT, and creates Home Assistant entities through MQTT Discovery. Support and issue tracking are available in the GitHub repository.</Profile>
   <Icon>https://raw.githubusercontent.com/kevlacross/ecowitt-share-to-mqtt/main/icon.svg</Icon>
   <WebPage>https://github.com/kevlacross/ecowitt-share-to-mqtt</WebPage>
-</CommunityApplications>
+</Maintainer>

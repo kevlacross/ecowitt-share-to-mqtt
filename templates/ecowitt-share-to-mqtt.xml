@@ -12,6 +12,6 @@
   <TemplateURL>https://raw.githubusercontent.com/kevlacross/ecowitt-share-to-mqtt/main/templates/ecowitt-share-to-mqtt.xml</TemplateURL>
   <Icon>https://raw.githubusercontent.com/kevlacross/ecowitt-share-to-mqtt/main/icon.svg</Icon>
   <Config Name="WebUI Port" Target="8080" Default="8080" Mode="tcp" Description="Local administration interface" Type="Port" Display="always" Required="true" Mask="false">8080</Config>
-  <Config Name="Configuration" Target="/config" Default="/mnt/user/appdata/Ecowitt-share_to_MQTT" Mode="rw" Description="Persistent configuration and SQLite database" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/Ecowitt-share_to_MQTT</Config>
+  <Config Name="Configuration" Target="/config" Default="/mnt/user/appdata/Ecowitt-share_to_MQTT/config" Mode="rw" Description="Persistent configuration and SQLite database; must be writable by UID/GID 1000:1000" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/Ecowitt-share_to_MQTT/config</Config>
   <Config Name="Timezone" Target="TZ" Default="Etc/UTC" Mode="" Description="Timezone" Type="Variable" Display="advanced" Required="false" Mask="false">Etc/UTC</Config>
 </Container>

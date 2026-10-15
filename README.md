@@ -29,6 +29,15 @@ Ecowitt shared station  →  Ecowitt Share to MQTT  →  MQTT broker  →  Home 
 
 1. Install the container image `ghcr.io/kevlacross/ecowitt-share-to-mqtt:0.1.2` with the included Unraid template: [`templates/ecowitt-share-to-mqtt.xml`](templates/ecowitt-share-to-mqtt.xml).
 2. Map `/config` to a persistent path, for example `/mnt/user/appdata/Ecowitt-share_to_MQTT/config`.
+   Before starting the container, create this directory and grant the container user write access:
+
+   ```bash
+   mkdir -p /mnt/user/appdata/Ecowitt-share_to_MQTT/config
+   chown 1000:1000 /mnt/user/appdata/Ecowitt-share_to_MQTT/config
+   ```
+
+   The image runs as `node` (UID/GID `1000:1000`). An existing database and its directory must also be writable by this user.
+
 3. Map container port `8080` to an available host port, for example `8081`.
 4. Open `http://UNRAID-IP:8081`.
 5. Enter the MQTT broker details and use **Verbindung testen**.
@@ -39,9 +48,11 @@ Home Assistant will add the device and selected entities automatically when MQTT
 
 ## Docker Compose
 
-Create a local `config` directory next to the compose file, then run:
+Create a local `config` directory next to the compose file and make it writable by the container user, then run:
 
 ```bash
+mkdir -p config
+sudo chown 1000:1000 config
 docker compose up -d
 ```
 
@@ -96,6 +107,12 @@ Useful commands:
 docker logs Ecowitt-share_to_MQTT
 docker pull ghcr.io/kevlacross/ecowitt-share-to-mqtt:0.1.2
 ```
+
+### SQLite startup error on Unraid
+
+If the container repeatedly exits with `unable to open database file`, check the host path mapped to `/config` and its permissions. For an installation using the directory layout above, map `/mnt/user/appdata/Ecowitt-share_to_MQTT/config` to `/config`, rather than the parent project directory. The existing `ecowitt-share-to-mqtt.sqlite` must be directly inside the mapped directory.
+
+Stop the container and back up the database before changing paths or permissions. If the directory or database belongs to another user, grant UID/GID `1000:1000` write access to that directory and database, then apply the corrected mapping in the Unraid template. Applying the mapping recreates the container; restarting alone does not change it. Keep the existing database to preserve stations, sensor selections and MQTT settings.
 
 If a share is revoked or expires, create a new share in Ecowitt and update that station; the other stations continue syncing.
 

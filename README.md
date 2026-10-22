@@ -148,3 +148,11 @@ The repository already contains the material needed for Community Applications s
 ## License
 
 Released under the [MIT License](LICENSE).
+
+## Limited share openings
+
+Ecowitt share links can have a limited number of openings and an expiry date. The bridge now follows the web dashboard's separation between initial discovery (`index/get_device_list`) and measurement refreshes (`index/home`). It resolves each share once, persists the station selection in SQLite and reuses it across polls and container restarts. Changing the share token creates a fresh selection. No browser page is opened or reloaded.
+
+Concurrent manual and scheduled syncs are coalesced. Transient failures back off from one minute to a maximum of 30 minutes rather than retrying every five seconds. If discovery returns no stations, that result is saved and automatic discovery of that same link stops, including after restarts; check the sharing settings and provide a new valid link to resume.
+
+This reduces repeated discovery; it does not bypass Ecowitt's expiry or access limits. The public frontend calls discovery at startup and refreshes measurements separately, but this alone does not prove which requests decrement the server-side counter. Verify the remaining openings in the owner's sharing settings before and after several refreshes. The UI displays persisted counts of this bridge’s discovery and measurement request attempts, with the recording start time. These exclude historical requests and other visitors, and are not a verified Ecowitt remaining-opening count. No automatic re-opening or fallback browser reload is attempted when measurements fail.

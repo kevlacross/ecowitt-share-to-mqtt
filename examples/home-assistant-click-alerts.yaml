@@ -1,0 +1,63 @@
+# Replace the entity ID and mobile_app service with your own Home Assistant IDs.
+# Counts bridge initialization attempts, NOT Ecowitt's verified click balance.
+# Paste as a new automation in Home Assistant's YAML editor.
+alias: Ecowitt share initialization milestones
+id: ecowitt_share_initialization_milestones
+triggers:
+  - trigger: numeric_state
+    entity_id: sensor.your_station_freigabe_initialisierungen
+    above: 99
+    id: "100"
+  - trigger: numeric_state
+    entity_id: sensor.your_station_freigabe_initialisierungen
+    above: 199
+    id: "200"
+  - trigger: numeric_state
+    entity_id: sensor.your_station_freigabe_initialisierungen
+    above: 299
+    id: "300"
+  - trigger: numeric_state
+    entity_id: sensor.your_station_freigabe_initialisierungen
+    above: 399
+    id: "400"
+  - trigger: numeric_state
+    entity_id: sensor.your_station_freigabe_initialisierungen
+    above: 499
+    id: "500"
+  - trigger: numeric_state
+    entity_id: sensor.your_station_freigabe_initialisierungen
+    above: 599
+    id: "600"
+  - trigger: numeric_state
+    entity_id: sensor.your_station_freigabe_initialisierungen
+    above: 699
+    id: "700"
+  - trigger: numeric_state
+    entity_id: sensor.your_station_freigabe_initialisierungen
+    above: 799
+    id: "800"
+  - trigger: numeric_state
+    entity_id: sensor.your_station_freigabe_initialisierungen
+    above: 899
+    id: "900"
+  - trigger: numeric_state
+    entity_id: sensor.your_station_freigabe_initialisierungen
+    above: 999
+    id: "1000"
+conditions:
+  - condition: template
+    value_template: >-
+      {{ trigger.from_state is not none
+         and is_number(trigger.from_state.state)
+         and (trigger.from_state.state | float) < (trigger.id | int) }}
+actions:
+  - action: notify.mobile_app_your_phone
+    data:
+      title: "Ecowitt: {{ trigger.id }} share initializations"
+      message: >-
+        The local bridge counter has reached {{ trigger.id }} share
+        initializations. Current value: {{ trigger.to_state.state | int }}.
+      data:
+        tag: "ecowitt_share_{{ trigger.id }}"
+mode: queued
+max: 10

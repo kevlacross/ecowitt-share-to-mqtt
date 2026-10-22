@@ -160,3 +160,9 @@ This reduces repeated discovery; it does not bypass Ecowitt's expiry or access l
 ### MQTT request diagnostics
 
 Home Assistant MQTT Discovery adds **Freigabe-Initialisierungen** and **Messwertabfragen** as diagnostic counters on the existing station device. Their retained states are published under `<baseTopic>/<station-id>/share_initializations/state` and `measurement_requests/state` (station IDs use underscores instead of hyphens). Shared attributes include `recording_since` and `remaining_openings: null`; these are local attempts, not Ecowitt’s remaining click balance. Counters are published on broker connection and after successful or failed refreshes. Deleting a station also removes their discovery entries.
+
+### Phone notifications at initialization milestones
+
+[`examples/home-assistant-click-alerts.yaml`](examples/home-assistant-click-alerts.yaml) sends a Home Assistant Companion App push at each hundred from 100 through 1000. Replace the example sensor entity and `notify.mobile_app_your_phone` with your own IDs; then add it through the automation YAML editor. These thresholds refer to the local initialization counter, not measurement refreshes or Ecowitt's remaining click balance.
+
+The automation requires a numeric previous state below the threshold to avoid duplicate messages after startup or recovery from `unavailable`. It does not deliver missed thresholds retrospectively after a Home Assistant outage. Replacing the share with a new counter lets the milestones trigger again. The example contains no phone IDs, station identifiers, share URLs or credentials.

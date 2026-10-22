@@ -61,7 +61,7 @@ export class EcowittShareProvider {
       });
       if (!response.ok) throw new Error(`Ecowitt HTTP ${response.status}`);
       const payload = await response.json();
-      if (payload.error) throw new Error("Ecowitt share is unavailable; check its expiry and remaining openings");
+      if (payload.error) throw unavailableShare();
       if (payload.errcode !== "0" && payload.errcode !== 0) throw new Error(`Ecowitt rejected share link: ${payload.errmsg || "unknown error"}`);
       return payload;
     } finally { clearTimeout(timer); }
@@ -79,7 +79,15 @@ export class EcowittShareProvider {
     }
     if (this.pendingLists.has(key)) return this.pendingLists.get(key);
     const pending = (async () => {
-      const result = await this.request("index/get_device_list", { authorize });
+      let result;
+      try { result = await this.request("index/get_device_list", { authorize }); }
+      catch (error) {
+        if (error.retryable === false) {
+          this.stationLists.set(key, []);
+          this.saveStations(Object.fromEntries(this.stationLists));
+        }
+        throw error;
+      }
       const list = (result.list || []).map(({ device_id, share_id, name, type }) => ({ device_id, share_id, name, type }));
       this.stationLists.set(key, list);
       try { this.saveStations(Object.fromEntries(this.stationLists)); }

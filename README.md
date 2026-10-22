@@ -148,3 +148,21 @@ The repository already contains the material needed for Community Applications s
 ## License
 
 Released under the [MIT License](LICENSE).
+
+## Limited share openings
+
+Ecowitt share links can have a limited number of openings and an expiry date. The bridge now follows the web dashboard's separation between initial discovery (`index/get_device_list`) and measurement refreshes (`index/home`). It resolves each share once, persists the station selection in SQLite and reuses it across polls and container restarts. Changing the share token creates a fresh selection. No browser page is opened or reloaded.
+
+Concurrent manual and scheduled syncs are coalesced. Transient failures back off from one minute to a maximum of 30 minutes rather than retrying every five seconds. If discovery returns no stations, that result is saved and automatic discovery of that same link stops, including after restarts; check the sharing settings and provide a new valid link to resume.
+
+This reduces repeated discovery; it does not bypass Ecowitt's expiry or access limits. The public frontend calls discovery at startup and refreshes measurements separately, but this alone does not prove which requests decrement the server-side counter. Verify the remaining openings in the owner's sharing settings before and after several refreshes. The UI displays persisted counts of this bridge’s discovery and measurement request attempts, with the recording start time. These exclude historical requests and other visitors, and are not a verified Ecowitt remaining-opening count. No automatic re-opening or fallback browser reload is attempted when measurements fail.
+
+### MQTT request diagnostics
+
+Home Assistant MQTT Discovery adds **Freigabe-Initialisierungen** and **Messwertabfragen** as diagnostic counters on the existing station device. Their retained states are published under `<baseTopic>/<station-id>/share_initializations/state` and `measurement_requests/state` (station IDs use underscores instead of hyphens). Shared attributes include `recording_since` and `remaining_openings: null`; these are local attempts, not Ecowitt’s remaining click balance. Counters are published on broker connection and after successful or failed refreshes. Deleting a station also removes their discovery entries.
+
+### Phone notifications at initialization milestones
+
+[`examples/home-assistant-click-alerts.yaml`](examples/home-assistant-click-alerts.yaml) sends a Home Assistant Companion App push at each hundred from 100 through 1000. Replace the example sensor entity and `notify.mobile_app_your_phone` with your own IDs; then add it through the automation YAML editor. These thresholds refer to the local initialization counter, not measurement refreshes or Ecowitt's remaining click balance.
+
+The automation requires a numeric previous state below the threshold to avoid duplicate messages after startup or recovery from `unavailable`. It does not deliver missed thresholds retrospectively after a Home Assistant outage. Replacing the share with a new counter lets the milestones trigger again. The example contains no phone IDs, station identifiers, share URLs or credentials.

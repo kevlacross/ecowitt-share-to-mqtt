@@ -14,7 +14,7 @@ Designed for Unraid, but equally happy with Docker Compose on any amd64 or arm64
 Ecowitt shared station  →  Ecowitt Share to MQTT  →  MQTT broker  →  Home Assistant
 ```
 
-- Supports one or many shared stations, each with its own sync interval.
+- Supports one or many shared stations, each kept open in its own browser session.
 - Detects the measurements actually supplied by Ecowitt; no fixed sensor list is required.
 - Lets you enable, disable and rename individual sensors before publishing.
 - Uses meaningful German or English default names for recognised Ecowitt fields; your own sensor names always take priority.
@@ -94,8 +94,8 @@ No DOM or CSS scraping is used. Because this is an undocumented dashboard interf
 
 | Topic | Behaviour |
 | --- | --- |
-| Sync interval | Per station; minimum 30 seconds, with custom intervals supported. |
-| Resilience | HTTP timeouts, invalid-response handling and per-station error isolation. |
+| Updates | Driven by the open Ecowitt page; the server reads snapshots every five seconds without initiating upstream polls. |
+| Resilience | Persistent browser pages, stale-data checks and per-station error isolation; no automatic page reloads. |
 | MQTT | Connection test in the UI, automatic reconnect, last-will availability and clear status/error reporting. |
 | Monitoring | Last successful sync, duration, sensor count, last error and last MQTT publication are shown in the UI. |
 | Backup | Stop the container and copy `/config/ecowitt-share-to-mqtt.sqlite`. |
@@ -149,20 +149,26 @@ The repository already contains the material needed for Community Applications s
 
 Released under the [MIT License](LICENSE).
 
-## Limited share openings
+## Long-lived browser session
 
-Ecowitt share links can have a limited number of openings and an expiry date. The bridge now follows the web dashboard's separation between initial discovery (`index/get_device_list`) and measurement refreshes (`index/home`). It resolves each share once, persists the station selection in SQLite and reuses it across polls and container restarts. Changing the share token creates a fresh selection. No browser page is opened or reloaded.
+The bridge runs a headless Chromium page for each configured share/device. It opens the share URL once and keeps the page open. Ecowitt's own JavaScript and WebSocket notifications update the page; the bridge observes its `index/home` responses and publishes their measurements. The server's five-second task only reads that in-memory snapshot. It never issues its own periodic Ecowitt HTTP requests in browser mode.
 
-Concurrent manual and scheduled syncs are coalesced. Transient failures back off from one minute to a maximum of 30 minutes rather than retrying every five seconds. If discovery returns no stations, that result is saved and automatic discovery of that same link stops, including after restarts; check the sharing settings and provide a new valid link to resume.
+Repeated “synchronize” actions read the existing page snapshot. A container restart opens a new page and increases the page-opening counter. The page is not automatically reloaded after a timeout, stale data, a rejected share or a browser crash. The UI reports the session state; **Browser neu öffnen (+1)** explicitly disposes of the old page and opens a new one. Unexpected top-level navigation/reloads and popups are blocked to avoid unnoticed openings. Disabling/deleting a station closes its page.
 
-This reduces repeated discovery; it does not bypass Ecowitt's expiry or access limits. The public frontend calls discovery at startup and refreshes measurements separately, but this alone does not prove which requests decrement the server-side counter. Verify the remaining openings in the owner's sharing settings before and after several refreshes. The UI displays persisted counts of this bridge’s discovery and measurement request attempts, with the recording start time. These exclude historical requests and other visitors, and are not a verified Ecowitt remaining-opening count. No automatic re-opening or fallback browser reload is attempted when measurements fail.
+A browser cannot guarantee that Ecowitt keeps an expired/revoked link usable. Nor does keeping a page open prove that Ecowitt excludes the page's own data requests from its click quota: compare with the owner's remaining-count setting.
 
-### MQTT request diagnostics
+### Browser counters and migration
 
-Home Assistant MQTT Discovery adds **Freigabe-Initialisierungen** and **Messwertabfragen** as diagnostic counters on the existing station device. Their retained states are published under `<baseTopic>/<station-id>/share_initializations/state` and `measurement_requests/state` (station IDs use underscores instead of hyphens). Shared attributes include `recording_since` and `remaining_openings: null`; these are local attempts, not Ecowitt’s remaining click balance. Counters are published on broker connection and after successful or failed refreshes. Deleting a station also removes their discovery entries.
+**Freigabe-Seitenöffnungen** counts actual attempted top-level share navigations. **Messwertabfragen** counts `index/home` requests made by the open webpage, not requests generated by a server poller. Counters persist under a new SQLite `browserShareActivity` setting, starting with this browser version; the former `shareActivity` counters are retained separately because their “initializations” were only device-list API calls and cannot be interpreted as historical page loads. The UI displays the recording start time and browser session status. No upstream remaining balance is inferred.
 
-### Phone notifications at initialization milestones
+The existing MQTT unique IDs and state topics remain stable, so Home Assistant dashboards and milestone automations continue to refer to the same entities. The first counter's discovery display name changes to **Freigabe-Seitenöffnungen**. Retained states use `<baseTopic>/<station-id>/share_initializations/state` and `measurement_requests/state` (station IDs use underscores instead of hyphens). Attributes include `recording_since`, `remaining_openings: null` and the counter kind.
 
-[`examples/home-assistant-click-alerts.yaml`](examples/home-assistant-click-alerts.yaml) sends a Home Assistant Companion App push at each hundred from 100 through 1000. Replace the example sensor entity and `notify.mobile_app_your_phone` with your own IDs; then add it through the automation YAML editor. These thresholds refer to the local initialization counter, not measurement refreshes or Ecowitt's remaining click balance.
+### Phone notifications at page-opening milestones
 
-The automation requires a numeric previous state below the threshold to avoid duplicate messages after startup or recovery from `unavailable`. It does not deliver missed thresholds retrospectively after a Home Assistant outage. Replacing the share with a new counter lets the milestones trigger again. The example contains no phone IDs, station identifiers, share URLs or credentials.
+[`examples/home-assistant-click-alerts.yaml`](examples/home-assistant-click-alerts.yaml) sends a Companion App push at every hundred from 100 through 1000 actual page-opening attempts. Replace the example entity and `notify.mobile_app_your_phone` with your own IDs. The existing entity ID may still end in `freigabe_initialisierungen` because entity IDs are preserved on upgrade.
+
+The automation requires a numeric previous state below the threshold. It does not retrospectively deliver milestones crossed during a Home Assistant outage, nor send a duplicate on recovery from `unavailable`. The counter restarts its history when migrating from API mode; milestones can then be reached again. The example contains no phone IDs, share URLs or credentials.
+
+### Browser tests
+
+`npm test` runs the unit tests. For a real Chromium test against a local fixture page, run `TEST_BROWSER=1 npm test` after installing the matching browser with `npx playwright install --with-deps --only-shell chromium`. The fixture verifies repeated data updates from one document and blocked reloads without touching a private Ecowitt link. The Docker image includes the matching Playwright browser. It consumes more disk/RAM than the former HTTP-only version.

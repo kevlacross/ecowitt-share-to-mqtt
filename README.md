@@ -14,7 +14,7 @@ Designed for Unraid, but equally happy with Docker Compose on any amd64 or arm64
 Ecowitt shared station  →  Ecowitt Share to MQTT  →  MQTT broker  →  Home Assistant
 ```
 
-- Supports one or many shared stations, each with its own sync interval.
+- Supports one or many shared stations, each kept open in its own browser session.
 - Detects the measurements actually supplied by Ecowitt; no fixed sensor list is required.
 - Lets you enable, disable and rename individual sensors before publishing.
 - Uses meaningful German or English default names for recognised Ecowitt fields; your own sensor names always take priority.

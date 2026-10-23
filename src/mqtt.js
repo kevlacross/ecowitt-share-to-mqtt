@@ -32,7 +32,7 @@ export class MqttPublisher {
       this.client.publish(`${discovery}/sensor/${id}/config`,JSON.stringify(config),{retain:true});
       this.client.publish(state,String(sensor.value),{retain:true});
     }
-    this.client.publish(`${base}/${stationKey}/share_activity/attributes`,JSON.stringify({recording_since:activity.since,remaining_openings:null,counts:"bridge_request_attempts"}),{retain:true});
+    this.client.publish(`${base}/${stationKey}/share_activity/attributes`,JSON.stringify({recording_since:activity.since,remaining_openings:null,counts:activity.counterKind||"bridge_request_attempts"}),{retain:true});
   }
   clearDiscovery(settings,station,sensors){ if(!this.client) return;const c=this.config(settings),p=escapeTopic(c.discoveryPrefix||"homeassistant"),sk=slug(station.id);for(const s of [...sensors,...activitySensors({initializations:0,measurementRequests:0}).map(x=>({stableId:x.key}))]){const id=`ecowitt_share_${sk}_${slug(s.stableId)}`;this.client.publish(`${p}/sensor/${id}/config`,"",{retain:true});}}
 }

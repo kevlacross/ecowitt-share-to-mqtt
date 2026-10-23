@@ -6,9 +6,11 @@ LABEL org.opencontainers.image.title="Ecowitt Share to MQTT" \
       org.opencontainers.image.version="${VERSION}"
 WORKDIR /app
 COPY package*.json ./
-RUN npm install --omit=dev --no-audit --no-fund
-COPY src ./src
-COPY public ./public
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+RUN npm install --omit=dev --no-audit --no-fund \
+    && npx playwright install --with-deps --only-shell chromium
+COPY --chown=node:node src ./src
+COPY --chown=node:node public ./public
 ENV PORT=8080 CONFIG_DB=/config/ecowitt-share-to-mqtt.sqlite NODE_ENV=production
 EXPOSE 8080
 VOLUME ["/config"]

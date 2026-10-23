@@ -2,17 +2,18 @@ import http from "node:http";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { openDatabase } from "./db.js";
-import { EcowittShareProvider } from "./ecowitt-share-provider.js";
+import { BrowserShareProvider } from "./browser-share-provider.js";
 import { SyncGate } from "./sync-gate.js";
 import { MqttPublisher } from "./mqtt.js";
-const port=Number(process.env.PORT||8080), db=openDatabase(), provider=new EcowittShareProvider({savedStations:db.getSetting("shareStations",{}),saveStations:value=>db.setSetting("shareStations",value),savedActivity:db.getSetting("shareActivity",{}),saveActivity:value=>db.setSetting("shareActivity",value)}), syncGate=new SyncGate();
+const port=Number(process.env.PORT||8080), db=openDatabase(), provider=new BrowserShareProvider({onUpdate:authorize=>{for(const st of db.stations().filter(x=>x.enabled)){const full=db.station(st.id);if(provider.parseShareUrl(full.share_url).authorize===authorize)syncGate.reset(st.id);}},savedActivity:db.getSetting("browserShareActivity",{}),saveActivity:value=>db.setSetting("browserShareActivity",value)}), syncGate=new SyncGate();
+const lastBrowserUpdates=new Map();
 let mqttStatus={connected:false,error:null,lastPublished:null}; const mqtt=new MqttPublisher((x)=>{mqttStatus={...mqttStatus,...x};if(x.connected)publishActivities();});
 const settings=()=>db.getSetting("app",{mqtt:{host:"",port:1883,username:"",password:"",tls:false,baseTopic:"ecowitt_share",discoveryPrefix:"homeassistant"},language:"de",debug:false});
 function publishActivities(){for(const st of db.stations()){const station=db.station(st.id);mqtt.publishActivity(settings(),station,provider.diagnostics(station.share_url));}}
 function send(res,status,body){res.writeHead(status,{"content-type":"application/json","cache-control":"no-store"});res.end(JSON.stringify(body));}
 async function body(req){let raw="";for await(const chunk of req)raw+=chunk;if(raw.length>100000)throw Error("Request too large");return raw?JSON.parse(raw):{};}
 function sync(id){return syncGate.run(id,()=>performSync(id));}
-async function performSync(id){const station=db.station(id);if(!station)throw Error("Station not found");const started=Date.now();try{const appSettings=settings();const data=await provider.fetchStation(station.share_url,station.device_id,appSettings.language||"de");db.upsertSensors(id,data.measurements);db.updateResult(id,{durationMs:Date.now()-started,count:data.measurements.length});const s=db.sensors(id);mqtt.publish(appSettings,station,s);mqttStatus.lastPublished=new Date().toISOString();return {measurements:data.measurements.length};}catch(error){db.updateResult(id,{error:error.message,durationMs:Date.now()-started});throw error;}finally{mqtt.publishActivity(settings(),station,provider.diagnostics(station.share_url));}}
+async function performSync(id){const station=db.station(id);if(!station)throw Error("Station not found");const started=Date.now();try{const appSettings=settings();const data=await provider.fetchStation(station.share_url,station.device_id,appSettings.language||"de");if(lastBrowserUpdates.get(id)===data.receivedAt)return {measurements:data.measurements.length,cached:true};lastBrowserUpdates.set(id,data.receivedAt);db.upsertSensors(id,data.measurements);db.updateResult(id,{durationMs:Date.now()-started,count:data.measurements.length});const s=db.sensors(id);mqtt.publish(appSettings,station,s);mqttStatus.lastPublished=new Date().toISOString();return {measurements:data.measurements.length};}catch(error){db.updateResult(id,{error:error.message,durationMs:Date.now()-started});throw error;}finally{mqtt.publishActivity(settings(),station,provider.diagnostics(station.share_url));}}
 async function api(req,res,url){const parts=url.pathname.split("/").filter(Boolean), method=req.method;
  if(method==="GET"&&url.pathname==="/api/status")return send(res,200,{stations:db.stations().map(st=>({...st,shareActivity:provider.diagnostics(db.station(st.id).share_url)})),mqtt:mqttStatus});
  if(method==="GET"&&url.pathname==="/api/settings"){const s=settings();if(s.mqtt?.password)s.mqtt.password="";return send(res,200,s);}
@@ -21,10 +22,11 @@ async function api(req,res,url){const parts=url.pathname.split("/").filter(Boole
  if(method==="GET"&&url.pathname==="/api/stations")return send(res,200,db.stations());
  if(method==="POST"&&url.pathname==="/api/stations"){const input=await body(req);if(!input.name||!input.shareUrl)throw Error("Name and Share URL are required");const id=db.saveStation(input);return send(res,201,{id});}
  const id=parts[2]; if(parts[1]==="stations"&&id){
-   if(method==="PUT"&&parts.length===3){const current=db.station(id);if(!current)throw Error("Station not found");const update=await body(req);const input={...current,...update,id,shareUrl:update.shareUrl||current.share_url};if(input.shareUrl!==current.share_url)syncGate.reset(id);return send(res,200,{id:db.saveStation(input)});}
-   if(method==="DELETE"&&parts.length===3){mqtt.clearDiscovery(settings(),db.station(id),db.sensors(id));db.deleteStation(id);return send(res,200,{ok:true});}
+   if(method==="PUT"&&parts.length===3){const current=db.station(id);if(!current)throw Error("Station not found");const update=await body(req);const input={...current,...update,id,shareUrl:update.shareUrl||current.share_url};if(input.shareUrl!==current.share_url || input.device_id!==current.device_id || input.enabled===false){await provider.release(current.share_url,current.device_id);syncGate.reset(id);lastBrowserUpdates.delete(id);}return send(res,200,{id:db.saveStation(input)});}
+   if(method==="DELETE"&&parts.length===3){await provider.release(db.station(id).share_url,db.station(id).device_id);mqtt.clearDiscovery(settings(),db.station(id),db.sensors(id));db.deleteStation(id);return send(res,200,{ok:true});}
    if(method==="GET"&&parts[3]==="sensors")return send(res,200,db.sensors(id));
    if(method==="PUT"&&parts[3]==="sensors"&&parts[4]){db.setSensor(id,decodeURIComponent(parts[4]),await body(req));return send(res,200,{ok:true});}
+   if(method==="POST"&&parts[3]==="reopen"){const st=db.station(id);if(!st)throw Error("Station not found");await provider.release(st.share_url,st.device_id);syncGate.reset(id);lastBrowserUpdates.delete(id);return send(res,200,{ok:true,...await sync(id)});}
    if(method==="POST"&&parts[3]==="sync"){try{return send(res,200,{ok:true,...await sync(id)});}catch(e){return send(res,502,{ok:false,error:e.message});}}
    if(method==="POST"&&parts[3]==="discovery"){mqtt.publish(settings(),db.station(id),db.sensors(id));mqtt.publishActivity(settings(),db.station(id),provider.diagnostics(db.station(id).share_url));return send(res,200,{ok:true});}
  } send(res,404,{error:"Not found"});
@@ -37,5 +39,5 @@ server.listen(port,"0.0.0.0",()=>console.log(`Ecowitt-share_to_MQTT listening on
 if (settings().mqtt?.host) {
   mqtt.connect(settings()).catch(error => console.error(`MQTT startup connection failed: ${error.message}`));
 }
-const shutdown=async()=>{console.log("Shutdown requested");await mqtt.stop();db.close();server.close(()=>process.exit(0));setTimeout(()=>process.exit(1),8000).unref();};process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);
-setInterval(()=>{for(const st of db.stations().filter(x=>x.enabled)){const due=!st.lastSuccess||Date.now()-Date.parse(st.lastSuccess)>=st.intervalSeconds*1000;if(due&&syncGate.ready(st.id))sync(st.id).catch(e=>console.error(`Station ${st.name}: ${e.message}`));}},5000).unref();
+const shutdown=async()=>{console.log("Shutdown requested");await provider.close();await mqtt.stop();db.close();server.close(()=>process.exit(0));setTimeout(()=>process.exit(1),8000).unref();};process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);
+setInterval(()=>{for(const st of db.stations().filter(x=>x.enabled)){const due=true;if(due&&syncGate.ready(st.id))sync(st.id).catch(e=>console.error(`Station ${st.name}: ${e.message}`));}},5000).unref();

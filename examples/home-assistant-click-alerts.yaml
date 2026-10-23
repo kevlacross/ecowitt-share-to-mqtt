@@ -1,5 +1,5 @@
 # Replace the entity ID and mobile_app service with your own Home Assistant IDs.
-# Counts bridge initialization attempts, NOT Ecowitt's verified click balance.
+# Counts browser page-opening attempts, NOT Ecowitt's verified click balance.
 # Paste as a new automation in Home Assistant's YAML editor.
 alias: Ecowitt share initialization milestones
 id: ecowitt_share_initialization_milestones
@@ -53,10 +53,10 @@ conditions:
 actions:
   - action: notify.mobile_app_your_phone
     data:
-      title: "Ecowitt: {{ trigger.id }} share initializations"
+      title: "Ecowitt: {{ trigger.id }} page openings"
       message: >-
-        The local bridge counter has reached {{ trigger.id }} share
-        initializations. Current value: {{ trigger.to_state.state | int }}.
+        The local bridge counter has reached {{ trigger.id }} browser page
+        openings. Current value: {{ trigger.to_state.state | int }}.
       data:
         tag: "ecowitt_share_{{ trigger.id }}"
 mode: queued
